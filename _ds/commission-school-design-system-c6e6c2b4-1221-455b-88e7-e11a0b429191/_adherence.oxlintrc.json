@@ -1,0 +1,238 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": [
+          {
+            "group": [
+              "components/content/**",
+              "components/school/**",
+              "ui_kits/instagram-posts/**",
+              "ui_kits/school-platform/**"
+            ],
+            "message": "Import design-system components from 'index.js', not component internals."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+        "message": "Raw hex color — use a design-system color token via var()."
+      },
+      {
+        "selector": "Literal[value=/\\b\\d+px\\b/]",
+        "message": "Raw px value — use a design-system spacing token via var()."
+      },
+      {
+        "selector": "Literal[value=/font-family\\s*:\\s*(?!['\\\"]?(?:Bebas Neue|Garet|Playfair Display))/i]",
+        "message": "Font not provided by the design system. Available: Bebas Neue, Garet, Playfair Display."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='GrainBackground'] > JSXAttribute > JSXIdentifier[name!=/^(?:tone|children|style|key|ref|className|style|children)$/]",
+        "message": "<GrainBackground> doesn't accept that prop. Declared props: tone, children, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='GrainBackground'] > JSXAttribute[name.name='tone'] > Literal[value!=/^(?:blue|red|cream|dark)$/]",
+        "message": "<GrainBackground> tone must be one of 'blue' | 'red' | 'cream' | 'dark'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='HighlightMark'] > JSXAttribute > JSXIdentifier[name!=/^(?:tone|underline|children|style|key|ref|className|style|children)$/]",
+        "message": "<HighlightMark> doesn't accept that prop. Declared props: tone, underline, children, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='HighlightMark'] > JSXAttribute[name.name='tone'] > Literal[value!=/^(?:paper|red|blue|dark)$/]",
+        "message": "<HighlightMark> tone must be one of 'paper' | 'red' | 'blue' | 'dark'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='InitialsAvatar'] > JSXAttribute > JSXIdentifier[name!=/^(?:name|size|style|key|ref|className|style|children)$/]",
+        "message": "<InitialsAvatar> doesn't accept that prop. Declared props: name, size, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='OccupancyMeter'] > JSXAttribute > JSXIdentifier[name!=/^(?:occupied|max|style|key|ref|className|style|children)$/]",
+        "message": "<OccupancyMeter> doesn't accept that prop. Declared props: occupied, max, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Pill'] > JSXAttribute > JSXIdentifier[name!=/^(?:tone|children|style|key|ref|className|style|children)$/]",
+        "message": "<Pill> doesn't accept that prop. Declared props: tone, children, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Pill'] > JSXAttribute[name.name='tone'] > Literal[value!=/^(?:blue|red|paper|neutral|outline)$/]",
+        "message": "<Pill> tone must be one of 'blue' | 'red' | 'paper' | 'neutral' | 'outline'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='PostFrame'] > JSXAttribute > JSXIdentifier[name!=/^(?:width|children|key|ref|className|style|children)$/]",
+        "message": "<PostFrame> doesn't accept that prop. Declared props: width, children."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='QuoteMark'] > JSXAttribute > JSXIdentifier[name!=/^(?:tone|children|style|key|ref|className|style|children)$/]",
+        "message": "<QuoteMark> doesn't accept that prop. Declared props: tone, children, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='QuoteMark'] > JSXAttribute[name.name='tone'] > Literal[value!=/^(?:light|dark)$/]",
+        "message": "<QuoteMark> tone must be one of 'light' | 'dark'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='StickerElement'] > JSXAttribute > JSXIdentifier[name!=/^(?:name|size|rotate|style|key|ref|className|style|children)$/]",
+        "message": "<StickerElement> doesn't accept that prop. Declared props: name, size, rotate, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='StickerElement'] > JSXAttribute[name.name='name'] > Literal[value!=/^(?:bird-blue|bird-red|flower-blue|flower-red|mountain-blue|mountain-red|blob-blue|blob-red|star-blue|star-red)$/]",
+        "message": "<StickerElement> name must be one of 'bird-blue' | 'bird-red' | 'flower-blue' | 'flower-red' | 'mountain-blue' | 'mountain-red' | 'blob-blue' | 'blob-red' | 'star-blue' | 'star-red'."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {
+      "GrainBackground": {
+        "replaces": []
+      },
+      "HighlightMark": {
+        "replaces": []
+      },
+      "InitialsAvatar": {
+        "replaces": []
+      },
+      "OccupancyMeter": {
+        "replaces": []
+      },
+      "Pill": {
+        "replaces": []
+      },
+      "PostFrame": {
+        "replaces": []
+      },
+      "QuoteMark": {
+        "replaces": []
+      },
+      "StickerElement": {
+        "replaces": []
+      }
+    },
+    "tokens": [
+      "--blue-600",
+      "--border-hairline",
+      "--cream-50",
+      "--duotone-highlight",
+      "--duotone-shadow",
+      "--font-accent-serif",
+      "--font-body",
+      "--font-display",
+      "--gray-900",
+      "--highlight-pad-x",
+      "--highlight-pad-y",
+      "--paper-100",
+      "--radius-none",
+      "--radius-pill",
+      "--radius-sm",
+      "--red-600",
+      "--shadow-inset-hairline",
+      "--space-1",
+      "--space-2",
+      "--space-3",
+      "--space-4",
+      "--space-5",
+      "--space-6",
+      "--space-7",
+      "--space-8",
+      "--space-9",
+      "--surface-accent-blue",
+      "--surface-accent-red",
+      "--surface-highlight-paper",
+      "--surface-inverse",
+      "--surface-page",
+      "--text-accent-quote",
+      "--text-body-lg",
+      "--text-body-md",
+      "--text-body-sm",
+      "--text-body-xl",
+      "--text-display-lg",
+      "--text-display-md",
+      "--text-display-sm",
+      "--text-display-xl",
+      "--text-ink",
+      "--text-label",
+      "--text-on-accent",
+      "--text-on-paper",
+      "--tracking-display",
+      "--tracking-label",
+      "--white"
+    ],
+    "tokenKinds": {
+      "--blue-600": "color",
+      "--red-600": "color",
+      "--cream-50": "color",
+      "--gray-900": "color",
+      "--paper-100": "color",
+      "--white": "color",
+      "--surface-page": "color",
+      "--surface-inverse": "color",
+      "--surface-accent-blue": "color",
+      "--surface-accent-red": "color",
+      "--surface-highlight-paper": "color",
+      "--text-ink": "font",
+      "--text-on-accent": "font",
+      "--text-on-paper": "font",
+      "--border-hairline": "color",
+      "--duotone-shadow": "shadow",
+      "--duotone-highlight": "color",
+      "--font-display": "font",
+      "--font-body": "font",
+      "--font-accent-serif": "font",
+      "--text-display-xl": "font",
+      "--text-display-lg": "font",
+      "--text-display-md": "font",
+      "--text-display-sm": "font",
+      "--text-body-xl": "font",
+      "--text-body-lg": "font",
+      "--text-body-md": "font",
+      "--text-body-sm": "font",
+      "--text-label": "font",
+      "--text-accent-quote": "font",
+      "--tracking-display": "font",
+      "--tracking-label": "font",
+      "--space-1": "spacing",
+      "--space-2": "spacing",
+      "--space-3": "spacing",
+      "--space-4": "spacing",
+      "--space-5": "spacing",
+      "--space-6": "spacing",
+      "--space-7": "spacing",
+      "--space-8": "spacing",
+      "--space-9": "spacing",
+      "--highlight-pad-x": "spacing",
+      "--highlight-pad-y": "spacing",
+      "--radius-none": "radius",
+      "--radius-sm": "radius",
+      "--radius-pill": "radius",
+      "--shadow-inset-hairline": "shadow"
+    },
+    "fontFamilies": [
+      "Bebas Neue",
+      "Garet",
+      "Playfair Display"
+    ]
+  }
+}

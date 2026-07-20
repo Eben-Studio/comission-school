@@ -1,0 +1,25 @@
+/* Commission School — spacing, radii, shadow tokens
+   The Figma frames use exact non-grid values (e.g. 109.412px, 88.726px rectangles) —
+   these tokens cover layout scaffolding, not literal asset geometry. */
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  /* Highlight-block padding (the marker-stroke rectangles behind headline text) */
+  --highlight-pad-x: 18px;
+  --highlight-pad-y: 8px;
+
+  --radius-none: 0px;      /* brand uses hard-edged blocks almost everywhere */
+  --radius-sm: 2px;        /* seen on the dark "Elementos" swatch frames */
+  --radius-pill: 999px;
+
+  --shadow-inset-hairline: inset 0 0 0 1px var(--border-hairline);
+}

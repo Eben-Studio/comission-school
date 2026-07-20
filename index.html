@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<meta name="ext-resource-dependency" content="school-platform/assets/commission-logo.jpg" data-resource-id="commissionLogo" />
+<template id="__bundler_thumbnail" data-bg-color="#0305C6">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="50" r="46" fill="#0305C6"/>
+    <text x="50" y="58" font-family="sans-serif" font-size="34" font-weight="700" fill="#FFFFF3" text-anchor="middle">CS</text>
+  </svg>
+</template>
+<helmet>
+  <link rel="stylesheet" href="_ds/commission-school-design-system-c6e6c2b4-1221-455b-88e7-e11a0b429191/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/commission-school-design-system-c6e6c2b4-1221-455b-88e7-e11a0b429191/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/commission-school-design-system-c6e6c2b4-1221-455b-88e7-e11a0b429191/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/commission-school-design-system-c6e6c2b4-1221-455b-88e7-e11a0b429191/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/commission-school-design-system-c6e6c2b4-1221-455b-88e7-e11a0b429191/styles.css">
+  <script src="_ds/commission-school-design-system-c6e6c2b4-1221-455b-88e7-e11a0b429191/_ds_bundle.js"></script>
+  <script src="./data.js"></script>
+  <script src="./image-slot.js"></script>
+  <style>
+    html, body { margin: 0; height: 100%; background: #f4f4f4; }
+    a { color: #0305C6; }
+    a:hover { color: #E93323; }
+  </style>
+</helmet>
+<div style="height:100vh;width:100%;overflow:hidden;font-family:var(--font-body)">
+  <x-import component-from-global-scope="SchoolAppV2" from="./SchoolPlatformV2.jsx" hint-size="100%,100%"></x-import>
+</div>
+
+</x-dc>
+</body>
+</html>
+  

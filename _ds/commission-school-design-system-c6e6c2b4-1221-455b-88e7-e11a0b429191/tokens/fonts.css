@@ -1,0 +1,26 @@
+/* Commission School — webfonts */
+
+@font-face {
+  font-family: "Bebas Neue";
+  src: url("../assets/fonts/BebasNeue-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* "Playfair Display" (--font-accent-serif) has no bundled file yet — it is the
+   nearest Google Fonts match for the hand-set serif/blackletter quote caps seen
+   in the source reference cards. Loaded from Google Fonts below as a stand-in;
+   ask the user for the real font file to replace this substitution. */
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&display=swap");
+
+@font-face {
+  font-family: "Garet";
+  src:
+    url("../assets/fonts/Garet-Book.woff2") format("woff2"),
+    url("../assets/fonts/Garet-Book.woff") format("woff"),
+    url("../assets/fonts/Garet-Book.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

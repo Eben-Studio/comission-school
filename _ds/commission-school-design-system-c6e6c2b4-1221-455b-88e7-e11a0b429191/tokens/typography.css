@@ -1,0 +1,28 @@
+/* Commission School — type tokens
+   Bebas Neue: display/headline (condensed all-caps).
+   Garet: body copy, UI labels, captions. */
+
+:root {
+  --font-display: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
+  --font-body: "Garet", "Helvetica Neue", Arial, sans-serif;
+  --font-accent-serif: "Playfair Display", Georgia, "Times New Roman", serif; /* nearest match to the hand-set serif/blackletter quote caps seen in source cards — see readme */
+
+  /* Display scale — condensed caps, tight leading, on social-card canvases (1080x1350) */
+  --text-display-xl: 700 96px/0.92 var(--font-display);
+  --text-display-lg: 400 72px/0.94 var(--font-display);
+  --text-display-md: 400 54px/0.96 var(--font-display);
+  --text-display-sm: 400 38px/1 var(--font-display);
+
+  /* Body scale */
+  --text-body-xl: 400 34px/1.25 var(--font-body);
+  --text-body-lg: 400 26px/1.3 var(--font-body);
+  --text-body-md: 400 20px/1.4 var(--font-body);
+  --text-body-sm: 400 16px/1.4 var(--font-body);
+  --text-label: 400 14px/1.2 var(--font-body);
+
+  /* Accent serif — used sparingly for a single emphasis word or scripture quote */
+  --text-accent-quote: 400 44px/1.05 var(--font-accent-serif);
+
+  --tracking-display: 0.005em;
+  --tracking-label: 0.04em;
+}
