@@ -9,7 +9,70 @@
 // (design-system bundle) being loaded before this file, and <image-slot>
 // (image-slot.js) being registered.
 
-const LOGO = (window.__resources && window.__resources.commissionLogo) || "./commission-logo.jpg";
+const LOGO = (window.__resources && window.__resources.commissionLogo) || "commission-logo.jpg";
+const NIVEIS_TURMA = ["Básico", "Intermediário", "Avançado"];
+const NIVEL_MAP = { "First Steps": "Básico", "Mid Journey": "Intermediário", "High Riders": "Avançado" };
+const STICKER_EXT = { "star-blue": "svg", "star-red": "svg" };
+const stickerSrc = (name) => `./assets/illustrations/${name}.${STICKER_EXT[name] || "png"}`;
+
+const MES_WEEK = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+function weekNumberOf(y, m, day) {
+  const d = new Date(Date.UTC(y, m, day));
+  const dayNum = (d.getUTCDay() + 6) % 7;
+  d.setUTCDate(d.getUTCDate() - dayNum + 3);
+  const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+  return 1 + Math.round(((d - firstThursday) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+}
+function MonthCalendar({ monthDate, setMonthDate, eventsForDay, onDayClick, dotColor }) {
+  const stickerName = dotColor === "var(--red-600)" ? "star-red" : "star-blue";
+  const y = monthDate.getFullYear(), m = monthDate.getMonth();
+  const firstDow = (new Date(y, m, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < firstDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+  const today = new Date();
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
+        <button onClick={() => setMonthDate(new Date(y, m - 1, 1))} style={{ all: "unset", cursor: "pointer", font: "600 16px var(--font-body)", padding: "4px 10px", background: "#f2f2f2" }}>‹</button>
+        <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 24, lineHeight: "24px", minWidth: 200, textTransform: "capitalize" }}>{monthDate.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</span>
+        <button onClick={() => setMonthDate(new Date(y, m + 1, 1))} style={{ all: "unset", cursor: "pointer", font: "600 16px var(--font-body)", padding: "4px 10px", background: "#f2f2f2" }}>›</button>
+        <button onClick={() => setMonthDate(new Date())} style={{ all: "unset", cursor: "pointer", font: "600 12px var(--font-body)", padding: "6px 14px", background: "var(--blue-600)", color: "#fff" }}>Hoje</button>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", border: "1px solid #eee" }}>
+        {MES_WEEK.map((d) => (
+          <div key={d} style={{ font: "600 11px var(--font-body)", color: "#999", textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "center", padding: "8px 0", borderBottom: "2px solid var(--gray-900)" }}>{d}</div>
+        ))}
+        {cells.map((day, i) => {
+          const eventos = day ? eventsForDay(day) : [];
+          const isToday = day && y === today.getFullYear() && m === today.getMonth() && day === today.getDate();
+          const isMonday = i % 7 === 0;
+          return (
+            <div
+              key={i}
+              onClick={() => day && eventos.length > 0 && onDayClick(day, eventos)}
+              style={{ minHeight: 92, borderRight: "1px solid #f2f2f2", borderBottom: "1px solid #f2f2f2", padding: 6, display: "flex", flexDirection: "column", gap: 4, background: day ? "#fff" : "#fafafa", cursor: day && eventos.length > 0 ? "pointer" : "default", position: "relative" }}
+            >
+              {day && isMonday && <span style={{ position: "absolute", top: 4, left: 6, font: "400 10px var(--font-body)", color: "#ccc" }}>sem {weekNumberOf(y, m, day)}</span>}
+              {day && (
+                <React.Fragment>
+                  <span style={{ alignSelf: "flex-end", font: "600 12px var(--font-body)", color: isToday ? "#fff" : "#999", background: isToday ? "var(--blue-600)" : "transparent", width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>{day}</span>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginTop: "auto" }}>
+                    {eventos.map((ev, k) => (
+                      <img key={k} src={stickerSrc(ev.icon || stickerName)} alt="" title={ev.label} style={{ height: 14 }} />
+                    ))}
+                  </div>
+                </React.Fragment>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 {
 function Home({ onEnterStaff, onEnterStudent }) {
@@ -48,7 +111,7 @@ const { TEACHERS } = window.SchoolData;
 function TeacherLogin({ onLogin, onBack }) {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [selected, setSelected] = React.useState(TEACHERS[0]);
+  const [selected, setSelected] = React.useState("Equipe");
 
   const submit = (e) => {
     e.preventDefault();
@@ -90,16 +153,16 @@ window.TeacherLogin = TeacherLogin;
 }
 
 {
-const { ALL_STUDENTS } = window.SchoolData;
+const { DEMO_STUDENTS } = window.SchoolData;
 
 function StudentLogin({ onLogin, onBack }) {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [selected, setSelected] = React.useState(ALL_STUDENTS[0].matricula);
+  const [selected, setSelected] = React.useState(DEMO_STUDENTS[0].matricula);
 
   const submit = (e) => {
     e.preventDefault();
-    const student = ALL_STUDENTS.find((s) => s.matricula === selected);
+    const student = DEMO_STUDENTS.find((s) => s.matricula === selected);
     onLogin(student);
   };
 
@@ -121,7 +184,7 @@ function StudentLogin({ onLogin, onBack }) {
 
         <label style={{ font: "600 12px var(--font-body)", color: "#777", textTransform: "uppercase", marginTop: 8 }}>Entrar como (demo)</label>
         <select value={selected} onChange={(e) => setSelected(e.target.value)} style={{ border: "1px solid #ddd", padding: "10px 12px", font: "400 14px var(--font-body)" }}>
-          {ALL_STUDENTS.map((s) => (
+          {DEMO_STUDENTS.map((s) => (
             <option key={s.matricula} value={s.matricula}>{s.name} — {s.turmaNome}</option>
           ))}
         </select>
@@ -229,7 +292,7 @@ function Dashboard({ onOpenTurma, teacherFilter }) {
   const alertTurmas = GROUP_TURMAS.filter((t) => t.ocupacao >= 90);
   const spotlight = alertTurmas[0] || GROUP_TURMAS[0];
 
-  const totalAlunos = GROUP_TURMAS.reduce((n, t) => n + t.matriculados, 0) + INDIVIDUAL_TURMAS.length;
+  const totalAlunos = window.SchoolData.TOTAL_ALUNOS_REAL;
   const totalTurmas = GROUP_TURMAS.length + INDIVIDUAL_TURMAS.length;
   const totalProfessores = new Set([...GROUP_TURMAS.map((t) => t.professor), ...INDIVIDUAL_TURMAS.map((t) => t.professor)].filter(Boolean)).size;
 
@@ -365,8 +428,15 @@ function TurmaDetail({ turmaId, onBack }) {
   const [draft, setDraft] = React.useState("");
   const [lessons, setLessons] = React.useState(() => lessonLogFor(turma).map((l) => ({ ...l, presentes: [...l.presentes] })));
   const [expanded, setExpanded] = React.useState(null);
+  const [aulasView, setAulasView] = React.useState("lista");
+  const [aulasMonth, setAulasMonth] = React.useState(() => (window.SchoolData.lessonLogFor ? new Date(2026, (parseInt((lessonLogFor(turma)[0] || {}).data?.split("/")[1] || "6", 10) - 1), 1) : new Date()));
+  const [projetos, setProjetos] = React.useState(() => window.SchoolData.projetosFor(turma));
+  const [projetoModal, setProjetoModal] = React.useState(null);
+  const [estagio, setEstagio] = React.useState(() => (turma && NIVEL_MAP[turma.estagio]) || "Básico");
 
   if (!turma) return null;
+
+  const jornadaPct = Math.round((projetos.filter((p) => p.status === "concluido").length / projetos.length) * 100);
 
   const frequencia = (aluno) => {
     const total = lessons.length;
@@ -391,6 +461,13 @@ function TurmaDetail({ turmaId, onBack }) {
     const url = URL.createObjectURL(file);
     setLessons((ls) => ls.map((l, i) => (i === lessonIdx ? { ...l, anexoPdf: { name: file.name, url } } : l)));
   };
+
+  const updateProjeto = (idx, patch) => setProjetos((ps) => ps.map((p, i) => (i === idx ? { ...p, ...patch } : p)));
+  const attachProjetoPdf = (idx, file) => {
+    if (!file) return;
+    updateProjeto(idx, { anexoPdf: { name: file.name, url: URL.createObjectURL(file) } });
+  };
+  const removeProjetoPdf = (idx) => updateProjeto(idx, { anexoPdf: null });
 
   const removePdf = (lessonIdx) => {
     setLessons((ls) => ls.map((l, i) => (i === lessonIdx ? { ...l, anexoPdf: null } : l)));
@@ -419,10 +496,15 @@ function TurmaDetail({ turmaId, onBack }) {
 
   return (
     <div style={{ background: "#fff", minHeight: "100%", fontFamily: "var(--font-body)" }}>
+      <div style={{ height: 160, position: "relative", background: "var(--blue-600)" }}>
+        <image-slot id={"turma-cover-" + turma.id} shape="rect" style={{ width: "100%", height: "100%" }} placeholder="foto de capa"></image-slot>
+      </div>
       <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "18px 32px", borderBottom: "1px solid #eee" }}>
         <button onClick={onBack} style={{ all: "unset", cursor: "pointer", font: "600 14px var(--font-body)", color: "var(--blue-600)" }}>← Voltar</button>
         <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 30, lineHeight: "30px", color: "var(--gray-900)", whiteSpace: "nowrap" }}>{turma.nome}</span>
-        <Pill tone="blue">{turma.estagio}</Pill>
+        <select value={estagio} onChange={(e) => setEstagio(e.target.value)} style={{ all: "unset", cursor: "pointer", font: "600 12px var(--font-body)", color: "#fff", background: "var(--blue-600)", padding: "5px 12px", borderRadius: 999 }}>
+          {NIVEIS_TURMA.map((n) => <option key={n} value={n} style={{ color: "#000", background: "#fff" }}>{n}</option>)}
+        </select>
       </div>
 
       <div style={{ padding: "20px 32px", display: "flex", gap: 40, flexWrap: "wrap", borderBottom: "1px solid #eee" }}>
@@ -436,7 +518,7 @@ function TurmaDetail({ turmaId, onBack }) {
         </div>
         <div>
           <div style={{ font: "400 12px var(--font-body)", color: "#999", textTransform: "uppercase" }}>Início — Término</div>
-          <div style={{ font: "600 16px var(--font-body)" }}>{turma.inicio} — {turma.termino || "em aberto"}</div>
+          <div style={{ font: "700 21px var(--font-body)" }}>{turma.inicio} — {turma.termino || "em aberto"}</div>
         </div>
         <div style={{ minWidth: 200 }}>
           <div style={{ font: "400 12px var(--font-body)", color: "#999", textTransform: "uppercase" }}>Ocupação</div>
@@ -451,7 +533,7 @@ function TurmaDetail({ turmaId, onBack }) {
       </div>
 
       <div style={{ display: "flex", gap: 4, padding: "16px 32px 0" }}>
-        {[["aulas", "Calendário & Aulas"], ["presenca", "Relatório de Presença"], ["mural", "Observações Internas"]].map(([key, label]) => (
+        {[["aulas", "Calendário & Aulas"], ["presenca", "Relatório de Presença"], ["jornada", "Jornada da turma"], ["mural", "Observações Internas"]].map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
@@ -470,8 +552,23 @@ function TurmaDetail({ turmaId, onBack }) {
       <div style={{ padding: 32 }}>
         {tab === "aulas" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <span style={{ font: "400 13px var(--font-body)", color: "#999" }}>Clique em uma aula para ver o conteúdo e marcar presença.</span>
-            {lessons.map((l, i) => {
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ font: "400 13px var(--font-body)", color: "#999" }}>Clique em uma aula para ver o conteúdo e marcar presença.</span>
+              <div style={{ display: "flex", gap: 2, marginLeft: "auto" }}>
+                {[["lista", "Lista"], ["calendario", "Calendário"]].map(([key, label]) => (
+                  <button key={key} onClick={() => setAulasView(key)} style={{ all: "unset", cursor: "pointer", padding: "6px 14px", font: "600 12px var(--font-body)", color: aulasView === key ? "#fff" : "var(--gray-900)", background: aulasView === key ? "var(--blue-600)" : "#f2f2f2" }}>{label}</button>
+                ))}
+              </div>
+            </div>
+            {aulasView === "calendario" && (
+              <MonthCalendar
+                monthDate={aulasMonth}
+                setMonthDate={setAulasMonth}
+                eventsForDay={(day) => lessons.map((l, i) => ({ l, i })).filter(({ l }) => { const [d, mo] = l.data.split("/").map(Number); return d === day && mo === aulasMonth.getMonth() + 1; }).map(({ l, i }) => ({ label: l.topico || "Aula", i }))}
+                onDayClick={(day, eventos) => { setAulasView("lista"); setExpanded(eventos[0].i); }}
+              />
+            )}
+            {aulasView === "lista" && lessons.map((l, i) => {
               const isOpen = expanded === i;
               return (
                 <div key={i} style={{ border: "1px solid #eee", padding: 18, display: "flex", flexDirection: "column", gap: 8 }}>
@@ -479,7 +576,7 @@ function TurmaDetail({ turmaId, onBack }) {
                     onClick={() => setExpanded(isOpen ? null : i)}
                     style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}
                   >
-                    <span style={{ font: "600 15px var(--font-body)", color: "var(--blue-600)" }}>{l.data}</span>
+                    <span style={{ font: "700 22px var(--font-body)", color: "var(--blue-600)" }}>{l.data}</span>
                     <span style={{ font: "600 16px var(--font-body)" }}>{l.topico || "(sem registro de lição)"}</span>
                     <span style={{ marginLeft: "auto", font: "400 13px var(--font-body)", color: "#888" }}>
                       {l.presentes.length}/{turma.alunos.length} presentes
@@ -525,8 +622,8 @@ function TurmaDetail({ turmaId, onBack }) {
                           {turma.alunos.map((a) => {
                             const presente = l.presentes.includes(a.matricula);
                             return (
-                              <div key={a.matricula} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                <span style={{ font: "400 14px var(--font-body)", flex: 1 }}>{a.name}</span>
+                              <div key={a.matricula} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                <span style={{ font: "600 14px var(--font-body)", color: "var(--gray-900)", width: 200 }}>{a.name}</span>
                                 <button
                                   onClick={() => toggleAttendance(i, a.matricula)}
                                   style={{
@@ -609,7 +706,7 @@ function TurmaDetail({ turmaId, onBack }) {
             <thead>
               <tr style={{ textAlign: "left", borderBottom: "2px solid var(--gray-900)" }}>
                 <th style={{ padding: "10px 8px", font: "600 13px var(--font-body)" }}>Aluno</th>
-                <th style={{ padding: "10px 8px", font: "600 13px var(--font-body)" }}>Matrícula</th>
+                <th style={{ padding: "10px 8px", font: "600 13px var(--font-body)" }}>Presença por aula</th>
                 <th style={{ padding: "10px 8px", font: "600 13px var(--font-body)" }}>% Frequência</th>
                 <th style={{ padding: "10px 8px", font: "600 13px var(--font-body)" }}>Status</th>
               </tr>
@@ -620,8 +717,19 @@ function TurmaDetail({ turmaId, onBack }) {
                 const risco = freq < 75;
                 return (
                   <tr key={a.matricula} style={{ borderBottom: "1px solid #eee" }}>
-                    <td style={{ padding: "10px 8px", font: "600 14px var(--font-body)" }}>{a.name}</td>
-                    <td style={{ padding: "10px 8px", font: "400 13px var(--font-body)", color: "#888" }}>{a.matricula}</td>
+                    <td style={{ padding: "10px 8px", font: "600 14px var(--font-body)" }}>
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        <span>{a.name}</span>
+                        <span style={{ font: "400 12px var(--font-body)", color: "#888" }}>{a.matricula}</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: "10px 8px" }}>
+                      <div style={{ display: "flex", gap: 5 }}>
+                        {lessons.map((l, i) => (
+                          <span key={i} title={l.data} style={{ width: 12, height: 12, background: l.presentes.includes(a.matricula) ? "var(--blue-600)" : "var(--red-600)" }} />
+                        ))}
+                      </div>
+                    </td>
                     <td style={{ padding: "10px 8px", font: "600 14px var(--font-body)", color: risco ? "var(--red-600)" : "var(--gray-900)" }}>{freq}%</td>
                     <td style={{ padding: "10px 8px" }}>
                       {risco ? <Pill tone="red">Risco de evasão</Pill> : <Pill tone="blue">Em dia</Pill>}
@@ -631,6 +739,35 @@ function TurmaDetail({ turmaId, onBack }) {
               })}
             </tbody>
           </table>
+        )}
+
+        {tab === "jornada" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 32, maxWidth: 720 }}>
+            <div>
+              <span style={{ font: "600 13px var(--font-body)", color: "#999", textTransform: "uppercase", letterSpacing: "0.05em" }}>Progresso no estágio {estagio}</span>
+              <div style={{ height: 14, background: "#f2f2f2", marginTop: 10 }}>
+                <div style={{ height: "100%", width: `${jornadaPct}%`, background: "var(--blue-600)" }} />
+              </div>
+              <span style={{ font: "400 13px var(--font-body)", color: "#888", marginTop: 6, display: "block" }}>{jornadaPct}% do estágio concluído</span>
+            </div>
+            <div>
+              <span style={{ font: "600 16px var(--font-body)", display: "block", marginBottom: 24 }}>Apresentação de projetos</span>
+              <div style={{ display: "flex", alignItems: "flex-start", position: "relative" }}>
+                <div style={{ position: "absolute", left: 12, right: 12, top: 9, height: 2, background: "#e5e5e5" }} />
+                {projetos.map((p, i) => (
+                  <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, position: "relative", zIndex: 1 }}>
+                    <div style={{
+                      width: 20, height: 20, borderRadius: "50%", boxSizing: "border-box",
+                      background: p.status === "concluido" ? "var(--blue-600)" : p.status === "proximo" ? "var(--red-600)" : "#fff",
+                      border: p.status === "pendente" ? "2px solid #ccc" : "none",
+                    }} />
+                    <span style={{ font: "600 12px var(--font-body)", textAlign: "center" }}>{p.nome}</span>
+                    <span style={{ font: "400 11px var(--font-body)", color: "#999" }}>{p.data}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
 
         {tab === "mural" && (
@@ -668,10 +805,27 @@ const { GROUP_TURMAS, findTurma, lessonLogFor, classMuralFor } = window.SchoolDa
 function StudentArea({ student }) {
   const { Pill } = window.CommissionSchoolDesignSystem_c6e6c2;
   const [connected, setConnected] = React.useState(false);
+  const [lessonModal, setLessonModal] = React.useState(null);
+  const [homeworks, setHomeworks] = React.useState([]);
+  const [homeworkModal, setHomeworkModal] = React.useState(false);
+  const [homeworkLessonIdx, setHomeworkLessonIdx] = React.useState("");
+  const [agendaMonth, setAgendaMonth] = React.useState(new Date(2026, 5, 1));
 
   const turma = !student.individual ? findTurma(student.turmaId) : null;
   const lessons = turma ? lessonLogFor(turma) : [];
   const mural = turma ? classMuralFor(turma) : [];
+  const projetos = turma ? window.SchoolData.projetosFor(turma) : [];
+  const proximoProjeto = projetos.find((p) => p.status === "proximo");
+  const jornadaPct = projetos.length ? Math.round((projetos.filter((p) => p.status === "concluido").length / projetos.length) * 100) : 0;
+
+  const enviarLicao = (file) => {
+    if (!file || homeworkLessonIdx === "") return;
+    const lesson = lessons[Number(homeworkLessonIdx)];
+    setHomeworks((hs) => [...hs.filter((h) => h.lessonIdx !== homeworkLessonIdx), { lessonIdx: homeworkLessonIdx, lessonData: lesson.data, lessonTopico: lesson.topico, name: file.name, url: URL.createObjectURL(file) }]);
+    setHomeworkModal(false);
+    setHomeworkLessonIdx("");
+  };
+  const removeHomework = (lessonIdx) => setHomeworks((hs) => hs.filter((h) => h.lessonIdx !== lessonIdx));
 
   return (
     <div style={{ background: "#fff", minHeight: "100%", fontFamily: "var(--font-body)", padding: 32 }}>
@@ -700,16 +854,12 @@ function StudentArea({ student }) {
             {connected ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <span style={{ font: "400 13px var(--font-body)", color: "#888" }}>Suas aulas foram sincronizadas com sua agenda do Google.</span>
-                <div style={{ display: "flex", gap: 8 }}>
-                  {["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((d) => (
-                    <div key={d} style={{ flex: 1, border: "1px solid #eee", padding: "8px 4px", textAlign: "center" }}>
-                      <div style={{ font: "600 11px var(--font-body)", color: "#999" }}>{d}</div>
-                      {turma && turma.horario.startsWith(d.slice(0, 3)) && (
-                        <div style={{ marginTop: 6, background: "var(--blue-600)", color: "#fff", font: "600 11px var(--font-body)", padding: "3px 2px" }}>aula</div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                <MonthCalendar
+                  monthDate={agendaMonth}
+                  setMonthDate={setAgendaMonth}
+                  eventsForDay={(day) => lessons.map((l, i) => ({ l, i })).filter(({ l }) => { const [d, mo] = l.data.split("/").map(Number); return d === day && mo === agendaMonth.getMonth() + 1; }).map(({ l }) => ({ label: l.topico || "Aula", l }))}
+                  onDayClick={(day, eventos) => setLessonModal(eventos[0].l)}
+                />
               </div>
             ) : (
               <span style={{ font: "400 13px var(--font-body)", color: "#888" }}>Conecte sua agenda do Google para receber lembretes automáticos das suas aulas.</span>
@@ -721,17 +871,52 @@ function StudentArea({ student }) {
               <span style={{ font: "600 16px var(--font-body)", display: "block", marginBottom: 12 }}>Últimas aulas</span>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {lessons.map((l, i) => (
-                  <div key={i} style={{ display: "flex", gap: 10, alignItems: "baseline" }}>
+                  <button key={i} onClick={() => setLessonModal(l)} style={{ all: "unset", cursor: "pointer", display: "flex", gap: 10, alignItems: "baseline" }}>
                     <span style={{ font: "600 13px var(--font-body)", color: "var(--blue-600)", width: 44 }}>{l.data}</span>
-                    <span style={{ font: "400 14px var(--font-body)" }}>{l.topico}</span>
-                  </div>
+                    <span style={{ font: "400 14px var(--font-body)", textDecoration: "underline" }}>{l.topico}</span>
+                  </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {turma && (
+            <div style={{ border: "1px solid #eee", padding: 20 }}>
+              <span style={{ font: "600 16px var(--font-body)", display: "block", marginBottom: 4 }}>Enviar lição de casa</span>
+              <span style={{ font: "400 13px var(--font-body)", color: "#888", display: "block", marginBottom: 12 }}>Escolha a aula e suba um PDF com sua lição para o professor conferir.</span>
+              {homeworks.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
+                  {homeworks.map((h) => (
+                    <div key={h.lessonIdx} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span style={{ font: "600 12px var(--font-body)", color: "var(--blue-600)" }}>{h.lessonData}</span>
+                      <a href={h.url} target="_blank" rel="noreferrer" style={{ font: "600 13px var(--font-body)", color: "var(--blue-600)", textDecoration: "underline" }}>📄 {h.name}</a>
+                      <button onClick={() => removeHomework(h.lessonIdx)} style={{ all: "unset", cursor: "pointer", font: "600 12px var(--font-body)", color: "#999" }}>remover</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button onClick={() => setHomeworkModal(true)} style={{ all: "unset", cursor: "pointer", background: "var(--red-600)", color: "#fff", padding: "9px 16px", font: "600 13px var(--font-body)", width: "fit-content" }}>
+                + Enviar lição de casa
+              </button>
             </div>
           )}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {turma && (
+            <div style={{ border: "1px solid #eee", padding: 20 }}>
+              <span style={{ font: "600 16px var(--font-body)", display: "block", marginBottom: 4 }}>Jornada da turma</span>
+              <div style={{ height: 12, background: "#f2f2f2", marginTop: 10 }}>
+                <div style={{ height: "100%", width: `${jornadaPct}%`, background: "var(--blue-600)" }} />
+              </div>
+              <span style={{ font: "400 13px var(--font-body)", color: "#888", marginTop: 6, display: "block" }}>{jornadaPct}% concluído no estágio {turma.estagio}</span>
+              {proximoProjeto && (
+                <div style={{ background: "var(--paper-100, #EFE2C0)", padding: "10px 12px", font: "400 13px var(--font-body)", marginTop: 12 }}>
+                  Próximo projeto: <strong>{proximoProjeto.nome}</strong> em {proximoProjeto.data}
+                </div>
+              )}
+            </div>
+          )}
           <div style={{ border: "1px solid #eee", padding: 20 }}>
             <span style={{ font: "600 16px var(--font-body)", display: "block", marginBottom: 4 }}>Matrícula</span>
             <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, lineHeight: "22px", letterSpacing: "0.03em" }}>{student.matricula}</span>
@@ -751,6 +936,39 @@ function StudentArea({ student }) {
           )}
         </div>
       </div>
+
+      {lessonModal && (
+        <div onClick={() => setLessonModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(51,51,51,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: 400, padding: 26, display: "flex", flexDirection: "column", gap: 12 }}>
+            <span style={{ font: "600 12px var(--font-body)", color: "var(--blue-600)" }}>{lessonModal.data}</span>
+            <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 24, lineHeight: "24px" }}>{lessonModal.topico || "Aula"}</span>
+            {lessonModal.materialUrl && (
+              <a href={lessonModal.materialUrl} target="_blank" rel="noreferrer" style={{ font: "600 13px var(--font-body)", color: "var(--blue-600)", textDecoration: "underline" }}>🔗 Acessar material da aula</a>
+            )}
+            <button onClick={() => setLessonModal(null)} style={{ all: "unset", cursor: "pointer", background: "var(--blue-600)", color: "#fff", padding: "10px 0", textAlign: "center", font: "600 14px var(--font-body)" }}>Fechar</button>
+          </div>
+        </div>
+      )}
+
+      {homeworkModal && (
+        <div onClick={() => { setHomeworkModal(false); setHomeworkLessonIdx(""); }} style={{ position: "fixed", inset: 0, background: "rgba(51,51,51,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: 380, padding: 26, display: "flex", flexDirection: "column", gap: 14 }}>
+            <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 24, lineHeight: "24px" }}>Enviar lição de casa</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label style={{ font: "600 11px var(--font-body)", color: "#777", textTransform: "uppercase" }}>Referente à aula</label>
+              <select value={homeworkLessonIdx} onChange={(e) => setHomeworkLessonIdx(e.target.value)} style={{ border: "1px solid #ddd", padding: "8px 10px", font: "400 14px var(--font-body)" }}>
+                <option value="">Selecione a aula…</option>
+                {lessons.map((l, i) => <option key={i} value={i}>{l.data} — {l.topico || "(sem registro)"}</option>)}
+              </select>
+            </div>
+            <label style={{ all: "unset", cursor: homeworkLessonIdx === "" ? "not-allowed" : "pointer", opacity: homeworkLessonIdx === "" ? 0.5 : 1, background: "var(--red-600)", color: "#fff", padding: "9px 16px", font: "600 13px var(--font-body)", width: "fit-content" }}>
+              + Escolher PDF
+              <input type="file" accept="application/pdf" disabled={homeworkLessonIdx === ""} onChange={(e) => enviarLicao(e.target.files[0])} style={{ display: "none" }} />
+            </label>
+            <button onClick={() => { setHomeworkModal(false); setHomeworkLessonIdx(""); }} style={{ all: "unset", cursor: "pointer", background: "#f2f2f2", padding: "10px 0", textAlign: "center", font: "600 13px var(--font-body)" }}>Cancelar</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -760,26 +978,29 @@ window.StudentArea = StudentArea;
 {
 const { ALL_STUDENTS, allTurmaOptions, nextMatricula } = window.SchoolData;
 
-function StudentsAdmin() {
+function StudentsAdmin({ students: studentsProp, setStudents: setStudentsProp }) {
   const { Pill } = window.CommissionSchoolDesignSystem_c6e6c2;
-  const [students, setStudents] = React.useState(ALL_STUDENTS);
+  const [localStudents, setLocalStudents] = React.useState(ALL_STUDENTS);
+  const students = studentsProp || localStudents;
+  const setStudents = setStudentsProp || setLocalStudents;
   const [query, setQuery] = React.useState("");
   const [showForm, setShowForm] = React.useState(false);
+  const [view, setView] = React.useState("tabela");
+  const [scoreModal, setScoreModal] = React.useState(null);
   const turmaOptions = allTurmaOptions();
   const [form, setForm] = React.useState({ name: "", turmaId: turmaOptions[0].id });
 
-  const filtered = students.filter((s) => s.name.toLowerCase().includes(query.toLowerCase()));
+  const base = students.filter((s) => s.primeiraAula);
+  const filtered = base.filter((s) => s.name.toLowerCase().includes(query.toLowerCase()));
 
-  const toggle = (matricula, field) => {
-    setStudents((list) => list.map((s) => (s.matricula === matricula ? { ...s, [field]: !s[field] } : s)));
-  };
+  const updateStudent = (matricula, patch) => setStudents((list) => list.map((s) => (s.matricula === matricula ? { ...s, ...patch } : s)));
 
   const addStudent = (e) => {
     e.preventDefault();
     if (!form.name.trim()) return;
     const turma = turmaOptions.find((t) => t.id === form.turmaId);
     setStudents((list) => [
-      { name: form.name.trim(), matricula: nextMatricula(), turmaId: turma.id, turmaNome: turma.nome, individual: !turma.group, onboarding: false, primeiraAula: false },
+      { name: form.name.trim(), matricula: nextMatricula(), turmaId: turma.id, turmaNome: turma.nome, individual: !turma.group, onboarding: false, primeiraAula: true, frequencia: 80, licaoCasa: 80, score: 80, financeiro: "adimplente" },
       ...list,
     ]);
     setForm({ name: "", turmaId: turmaOptions[0].id });
@@ -789,7 +1010,12 @@ function StudentsAdmin() {
   return (
     <div style={{ background: "#fff", minHeight: "100%", fontFamily: "var(--font-body)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 32px", borderBottom: "1px solid #eee" }}>
-        <span style={{ font: "600 13px var(--font-body)", color: "#999", textTransform: "uppercase", letterSpacing: "0.06em" }}>Alunos · {students.length} cadastrados</span>
+        <span style={{ font: "600 13px var(--font-body)", color: "#999", textTransform: "uppercase", letterSpacing: "0.06em" }}>Alunos · {base.length} na base</span>
+        <div style={{ display: "flex", gap: 2, marginLeft: 16 }}>
+          {[["tabela", "Tabela"], ["cards", "Cards"]].map(([key, label]) => (
+            <button key={key} onClick={() => setView(key)} style={{ all: "unset", cursor: "pointer", padding: "7px 14px", font: "600 12px var(--font-body)", color: view === key ? "#fff" : "var(--gray-900)", background: view === key ? "var(--blue-600)" : "#f2f2f2" }}>{label}</button>
+          ))}
+        </div>
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -817,36 +1043,85 @@ function StudentsAdmin() {
         </form>
       )}
 
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ textAlign: "left", borderBottom: "2px solid var(--gray-900)" }}>
-            <th style={{ padding: "12px 32px 10px 32px", font: "600 13px var(--font-body)" }}>Aluno</th>
-            <th style={{ padding: "12px 8px 10px", font: "600 13px var(--font-body)" }}>Matrícula</th>
-            <th style={{ padding: "12px 8px 10px", font: "600 13px var(--font-body)" }}>Turma</th>
-            <th style={{ padding: "12px 8px 10px", font: "600 13px var(--font-body)" }}>Onboarding</th>
-            <th style={{ padding: "12px 32px 10px 8px", font: "600 13px var(--font-body)" }}>Primeira aula</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.map((s) => (
-            <tr key={s.matricula} style={{ borderBottom: "1px solid #eee" }}>
-              <td style={{ padding: "10px 32px 10px 32px", font: "600 14px var(--font-body)" }}>{s.name}</td>
-              <td style={{ padding: "10px 8px", font: "400 13px var(--font-body)", color: "#888" }}>{s.matricula}</td>
-              <td style={{ padding: "10px 8px", font: "400 13px var(--font-body)", color: "#666" }}>{s.turmaNome}</td>
-              <td style={{ padding: "10px 8px" }}>
-                <button onClick={() => toggle(s.matricula, "onboarding")} style={{ all: "unset", cursor: "pointer" }}>
-                  <Pill tone={s.onboarding ? "blue" : "outline"}>{s.onboarding ? "Concluído" : "Pendente"}</Pill>
-                </button>
-              </td>
-              <td style={{ padding: "10px 8px 10px 8px" }}>
-                <button onClick={() => toggle(s.matricula, "primeiraAula")} style={{ all: "unset", cursor: "pointer" }}>
-                  <Pill tone={s.primeiraAula ? "blue" : "outline"}>{s.primeiraAula ? "Feita" : "Pendente"}</Pill>
-                </button>
-              </td>
+      {view === "tabela" && (
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ textAlign: "left", borderBottom: "2px solid var(--gray-900)" }}>
+              <th style={{ padding: "12px 32px 10px 32px", font: "600 13px var(--font-body)" }}>Aluno</th>
+              <th style={{ padding: "12px 8px 10px", font: "600 13px var(--font-body)" }}>Matrícula</th>
+              <th style={{ padding: "12px 8px 10px", font: "600 13px var(--font-body)" }}>Turma</th>
+              <th style={{ padding: "12px 8px 10px", font: "600 13px var(--font-body)" }}>Score</th>
+              <th style={{ padding: "12px 32px 10px 8px", font: "600 13px var(--font-body)" }}>Situação financeira</th>
             </tr>
+          </thead>
+          <tbody>
+            {filtered.map((s) => (
+              <tr key={s.matricula} style={{ borderBottom: "1px solid #eee" }}>
+                <td style={{ padding: "10px 32px 10px 32px" }}>
+                  <input defaultValue={s.name} onBlur={(e) => updateStudent(s.matricula, { name: e.target.value })} style={{ all: "unset", font: "600 14px var(--font-body)", width: "100%" }} />
+                </td>
+                <td style={{ padding: "10px 8px" }}>
+                  <input defaultValue={s.matricula} onBlur={(e) => updateStudent(s.matricula, { matricula: e.target.value })} style={{ all: "unset", font: "400 13px var(--font-body)", color: "#888", width: "100%" }} />
+                </td>
+                <td style={{ padding: "10px 8px" }}>
+                  <select
+                    value={s.turmaId || ""}
+                    onChange={(e) => {
+                      if (!e.target.value) { updateStudent(s.matricula, { turmaId: null, turmaNome: "Sem turma definida", individual: false }); return; }
+                      const t = turmaOptions.find((o) => o.id === e.target.value);
+                      updateStudent(s.matricula, { turmaId: t.id, turmaNome: t.nome, individual: !t.group });
+                    }}
+                    style={{ font: "400 13px var(--font-body)", color: "#666", border: "none", background: "transparent", outline: "none", width: "100%" }}
+                  >
+                    <option value="">Sem turma definida</option>
+                    {turmaOptions.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
+                  </select>
+                </td>
+                <td style={{ padding: "10px 8px" }}>
+                  <button onClick={() => setScoreModal(s)} style={{ all: "unset", cursor: "pointer", font: "700 15px var(--font-body)", color: s.score < 70 ? "var(--red-600)" : "var(--blue-600)", textDecoration: "underline" }}>{s.score}</button>
+                </td>
+                <td style={{ padding: "10px 8px 10px 8px" }}>
+                  <Pill tone={s.financeiro === "adimplente" ? "blue" : "red"}>{s.financeiro === "adimplente" ? "Adimplente" : "Inadimplente"}</Pill>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {view === "cards" && (
+        <div style={{ padding: 32, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 16 }}>
+          {filtered.map((s) => (
+            <div key={s.matricula} style={{ border: "1px solid #eee", padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+              <span style={{ font: "600 15px var(--font-body)" }}>{s.name}</span>
+              <span style={{ font: "400 12px var(--font-body)", color: "#999" }}>{s.matricula} · {s.turmaNome}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
+                <button onClick={() => setScoreModal(s)} style={{ all: "unset", cursor: "pointer", background: s.score < 70 ? "var(--red-600)" : "var(--blue-600)", color: "#fff", padding: "6px 12px", font: "700 14px var(--font-body)" }}>{s.score} pts</button>
+                <Pill tone={s.financeiro === "adimplente" ? "blue" : "red"}>{s.financeiro === "adimplente" ? "Adimplente" : "Inadimplente"}</Pill>
+              </div>
+            </div>
           ))}
-        </tbody>
-      </table>
+        </div>
+      )}
+
+      {scoreModal && (
+        <div onClick={() => setScoreModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(51,51,51,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: 360, padding: 26, display: "flex", flexDirection: "column", gap: 14 }}>
+            <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 26, lineHeight: "26px" }}>{scoreModal.name}</span>
+            <div style={{ display: "flex", gap: 0 }}>
+              <div style={{ padding: "0 18px 0 0" }}>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 30, lineHeight: "30px" }}>{scoreModal.frequencia}%</div>
+                <div style={{ font: "400 11px var(--font-body)", color: "#999", textTransform: "uppercase" }}>Assiduidade</div>
+              </div>
+              <div style={{ padding: "0 18px", borderLeft: "1px solid #eee" }}>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 30, lineHeight: "30px" }}>{scoreModal.licaoCasa}%</div>
+                <div style={{ font: "400 11px var(--font-body)", color: "#999", textTransform: "uppercase" }}>Lição de casa</div>
+              </div>
+            </div>
+            <button onClick={() => setScoreModal(null)} style={{ all: "unset", cursor: "pointer", background: "var(--blue-600)", color: "#fff", padding: "10px 0", textAlign: "center", font: "600 14px var(--font-body)" }}>Fechar</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1056,9 +1331,9 @@ function AvisosMural() {
   };
 
   return (
-    <div style={{ margin: "24px 32px 0", background: "var(--paper-100, #EFE2C0)", padding: "28px 32px", display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ background: "var(--paper-100, #EFE2C0)", padding: "28px 32px", display: "flex", flexDirection: "column", gap: 16 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 34, lineHeight: "34px", color: "var(--gray-900)" }}>Mural de avisos</span>
+        <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 34, lineHeight: "34px", color: "var(--gray-900)" }}>📍 Mural de avisos</span>
         <button onClick={() => setComposing((c) => !c)} style={{ all: "unset", cursor: "pointer", marginLeft: "auto", background: "var(--blue-600)", color: "#fff", padding: "9px 16px", font: "600 13px var(--font-body)" }}>
           {composing ? "Cancelar" : "+ Novo aviso"}
         </button>
@@ -1176,7 +1451,7 @@ function InsightsCarousel() {
   const open = insights.find((i) => i.id === expanded);
 
   return (
-    <div style={{ padding: "20px 32px 0" }} data-screen-label="Insights">
+    <div data-screen-label="Insights">
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
         <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, lineHeight: "22px", color: "var(--gray-900)" }}>Coisas importantes</span>
         <span style={{ font: "400 12px var(--font-body)", color: "#999" }}>deslize e clique para ver o ranking</span>
@@ -1236,29 +1511,49 @@ window.InsightsCarousel = InsightsCarousel;
 const D = window.SchoolData;
 
 function PainelMacro({ onOpenTurma }) {
-  const totalAlunos = D.GROUP_TURMAS.reduce((n, t) => n + t.matriculados, 0) + D.INDIVIDUAL_TURMAS.length;
+  const totalAlunos = D.TOTAL_ALUNOS_REAL;
   const totalTurmas = D.GROUP_TURMAS.length + D.INDIVIDUAL_TURMAS.length;
   const totalProfessores = new Set([...D.GROUP_TURMAS.map((t) => t.professor), ...D.INDIVIDUAL_TURMAS.map((t) => t.professor)].filter(Boolean)).size;
 
   return (
-    <div style={{ background: "#fff", minHeight: "100%", fontFamily: "var(--font-body)", paddingBottom: 40 }} data-screen-label="Painel">
-      <AvisosMural />
-      <div style={{ display: "flex", gap: 0, padding: "24px 32px 0" }}>
-        {[
-          ["Total de alunos", totalAlunos],
-          ["Turmas ativas", totalTurmas],
-          ["Professores", totalProfessores],
-          ["Média alunos/turma", D.MEDIA_ALUNOS_POR_TURMA],
-        ].map(([label, value], i) => (
-          <div key={label} style={{ padding: "0 28px", borderLeft: i > 0 ? "1px solid #eee" : "none" }}>
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 34, lineHeight: "34px", color: "var(--gray-900)" }}>{value}</div>
-            <div style={{ font: "400 12px var(--font-body)", color: "#999", textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</div>
-          </div>
-        ))}
+    <div style={{ background: "#F7F7F4", minHeight: "100%", fontFamily: "var(--font-body)", paddingBottom: 40, boxSizing: "border-box" }} data-screen-label="Painel">
+      <div style={{
+        height: 220, position: "relative", overflow: "hidden", display: "flex", alignItems: "center",
+        backgroundSize: "cover", backgroundPosition: "center",
+      }}>
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(3,5,198,0.75), rgba(3,5,198,0.35))" }} />
+        <div style={{ position: "relative", zIndex: 1, padding: "0 40px", display: "flex", flexDirection: "column", gap: 6 }}>
+          <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 52, lineHeight: "52px", color: "#fff" }}>Bem-vindo à Commission</span>
+          <span style={{ font: "400 16px var(--font-body)", color: "rgba(255,255,255,0.85)" }}>Plataforma de gestão pedagógica</span>
+        </div>
       </div>
-      <InsightsCarousel />
-      <div style={{ marginTop: 10, borderTop: "1px solid #eee" }}>
-        <TurmasTab onOpenTurma={onOpenTurma} />
+      <div style={{ padding: "24px 32px 0", display: "flex", flexDirection: "column", gap: 20 }}>
+        <AvisosMural />
+        <div style={{ background: "#fff", border: "1px solid #eee" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "16px 24px 0" }}>
+            <span style={{ width: 10, height: 10, background: "var(--blue-600)", flex: "none" }} />
+            <span style={{ font: "600 12px var(--font-body)", color: "#999", textTransform: "uppercase", letterSpacing: "0.06em" }}>Números gerais</span>
+          </div>
+          <div style={{ display: "flex", gap: 0, padding: "18px 24px 30px" }}>
+            {[
+              ["Total de alunos", totalAlunos],
+              ["Turmas ativas", totalTurmas],
+              ["Professores", totalProfessores],
+              ["Média alunos/turma", D.MEDIA_ALUNOS_POR_TURMA],
+            ].map(([label, value], i) => (
+              <div key={label} style={{ padding: "0 32px", borderLeft: i > 0 ? "1px solid #eee" : "none" }}>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 58, lineHeight: "58px", color: "var(--gray-900)" }}>{value}</div>
+                <div style={{ font: "400 13px var(--font-body)", color: "#999", textTransform: "uppercase", letterSpacing: "0.04em", marginTop: 4 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ background: "#fff", border: "1px solid #eee", padding: "20px 24px 24px" }}>
+          <InsightsCarousel />
+        </div>
+        <div style={{ background: "#fff", border: "1px solid #eee" }}>
+          <TurmasTab onOpenTurma={onOpenTurma} />
+        </div>
       </div>
     </div>
   );
@@ -1271,10 +1566,32 @@ window.PainelMacro = PainelMacro;
 const D = window.SchoolData;
 const { flagOf, countryOf, diasDe, horaDe, DIAS, assiduidade } = window.V2;
 
+function MilestoneBar({ turma }) {
+  const projetos = D.projetosFor(turma);
+  if (!projetos.length) return null;
+  const doneCount = projetos.filter((p) => p.status === "concluido").length;
+  const pct = Math.round((doneCount / projetos.length) * 100);
+  return (
+    <div style={{ marginTop: 2 }}>
+      <div style={{ height: 6, background: "#f2f2f2", position: "relative" }}>
+        <div style={{ height: "100%", width: `${pct}%`, background: "var(--blue-600)" }} />
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 1px" }}>
+          {projetos.map((p, i) => (
+            <div key={i} title={p.nome} style={{ width: 6, height: 6, borderRadius: "50%", background: p.status === "concluido" ? "#fff" : p.status === "proximo" ? "var(--red-600)" : "#ccc", boxShadow: p.status === "concluido" ? "0 0 0 1px var(--blue-600) inset" : "none" }} />
+          ))}
+        </div>
+      </div>
+      <span style={{ font: "400 11px var(--font-body)", color: "#999", marginTop: 3, display: "block" }}>{doneCount}/{projetos.length} marcos concluídos</span>
+    </div>
+  );
+}
+
 function TurmasTab({ onOpenTurma, teacherFilter }) {
   const { Pill, OccupancyMeter } = window.CommissionSchoolDesignSystem_c6e6c2;
   const [view, setView] = React.useState("cards");
   const [query, setQuery] = React.useState("");
+  const [monthDate, setMonthDate] = React.useState(new Date());
+  const [diaModal, setDiaModal] = React.useState(null);
 
   const turmas = (teacherFilter ? D.GROUP_TURMAS.filter((t) => t.professor === teacherFilter) : D.GROUP_TURMAS)
     .filter((t) => t.nome.toLowerCase().includes(query.toLowerCase()));
@@ -1317,7 +1634,7 @@ function TurmasTab({ onOpenTurma, teacherFilter }) {
               <div style={{ height: 130, background: i % 2 === 0 ? "var(--blue-600)" : "var(--red-600)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
                 <span style={{ fontSize: 52, lineHeight: 1 }}>{flagOf(t.id)}</span>
                 <div onClick={(e) => e.stopPropagation()} style={{ position: "absolute", inset: 0 }}>
-                  <image-slot id={"turma-cover-" + t.id} style={{ width: "100%", height: "100%" }} placeholder="foto de capa"></image-slot>
+                  <image-slot id={"turma-cover-" + t.id} shape="rect" style={{ width: "100%", height: "100%" }} placeholder="foto de capa"></image-slot>
                 </div>
                 <span style={{ position: "absolute", bottom: 8, right: 10, font: "600 11px var(--font-body)", color: "#fff", opacity: 0.85, textTransform: "uppercase", letterSpacing: "0.05em", pointerEvents: "none" }}>{countryOf(t.id)}</span>
                 {t.ocupacao >= 100 && (
@@ -1331,6 +1648,7 @@ function TurmasTab({ onOpenTurma, teacherFilter }) {
                 </div>
                 <span style={{ font: "400 13px var(--font-body)", color: "#888" }}>Prof. {t.professor} · {t.horario}</span>
                 <OccupancyMeter occupied={t.matriculados} max={t.maximo} />
+                <MilestoneBar turma={t} />
               </div>
             </div>
           ))}
@@ -1353,27 +1671,82 @@ function TurmasTab({ onOpenTurma, teacherFilter }) {
         </div>
       )}
 
-      {view === "calendario" && (
-        <div style={{ padding: "20px 32px", display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 10 }}>
-          {DIAS.map((dia) => (
-            <div key={dia} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <span style={{ font: "600 12px var(--font-body)", color: "#999", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid var(--gray-900)", paddingBottom: 6 }}>{dia}</span>
-              {turmas.filter((t) => diasDe(t.horario).includes(dia)).map((t) => (
-                <div key={t.id} onClick={() => onOpenTurma(t.id)} style={{ background: "var(--blue-600)", color: "#fff", padding: "10px 12px", cursor: "pointer", display: "flex", flexDirection: "column", gap: 3 }}>
-                  <span style={{ font: "600 12px var(--font-body)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{flagOf(t.id)} {t.nome}</span>
-                  <span style={{ font: "400 11px var(--font-body)", opacity: 0.85 }}>{horaDe(t.horario)} · {t.professor}</span>
-                </div>
-              ))}
-              {individuais.filter((t) => diasDe(t.horario).includes(dia)).map((t) => (
-                <div key={t.id} style={{ background: "var(--red-600)", color: "#fff", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 3 }}>
-                  <span style={{ font: "600 12px var(--font-body)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>1:1 {t.nome}</span>
-                  <span style={{ font: "400 11px var(--font-body)", opacity: 0.85 }}>{horaDe(t.horario)} · {t.professor}</span>
-                </div>
-              ))}
+      {view === "calendario" && (() => {
+        const WEEK = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+        const y = monthDate.getFullYear(), m = monthDate.getMonth();
+        const firstDow = new Date(y, m, 1).getDay();
+        const daysInMonth = new Date(y, m + 1, 0).getDate();
+        const cells = [];
+        for (let i = 0; i < firstDow; i++) cells.push(null);
+        for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+        while (cells.length % 7 !== 0) cells.push(null);
+        const turmasNoDia = (dow) => {
+          const dia = WEEK[dow];
+          return [
+            ...turmas.filter((t) => diasDe(t.horario).includes(dia)).map((t) => ({ ...t, tipo: "grupo" })),
+            ...individuais.filter((t) => diasDe(t.horario).includes(dia)).map((t) => ({ ...t, tipo: "individual" })),
+          ];
+        };
+        const today = new Date();
+        return (
+          <div style={{ padding: "20px 32px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
+              <button onClick={() => setMonthDate(new Date(y, m - 1, 1))} style={{ all: "unset", cursor: "pointer", font: "600 16px var(--font-body)", padding: "4px 10px", background: "#f2f2f2" }}>‹</button>
+              <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 24, lineHeight: "24px", minWidth: 200 }}>{monthDate.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</span>
+              <button onClick={() => setMonthDate(new Date(y, m + 1, 1))} style={{ all: "unset", cursor: "pointer", font: "600 16px var(--font-body)", padding: "4px 10px", background: "#f2f2f2" }}>›</button>
+              <button onClick={() => setMonthDate(new Date())} style={{ all: "unset", cursor: "pointer", font: "600 12px var(--font-body)", padding: "6px 14px", background: "var(--blue-600)", color: "#fff" }}>Hoje</button>
             </div>
-          ))}
-        </div>
-      )}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", border: "1px solid #eee" }}>
+              {WEEK.map((d) => (
+                <div key={d} style={{ font: "600 11px var(--font-body)", color: "#999", textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "center", padding: "8px 0", borderBottom: "2px solid var(--gray-900)" }}>{d}</div>
+              ))}
+              {cells.map((day, i) => {
+                const dow = i % 7;
+                const eventos = day ? turmasNoDia(dow) : [];
+                const isToday = day && y === today.getFullYear() && m === today.getMonth() && day === today.getDate();
+                return (
+                  <div key={i} style={{ minHeight: 92, borderRight: "1px solid #f2f2f2", borderBottom: "1px solid #f2f2f2", padding: 6, display: "flex", flexDirection: "column", gap: 4, background: day ? "#fff" : "#fafafa" }}>
+                    {day && (
+                      <React.Fragment>
+                        <span style={{ font: "600 12px var(--font-body)", color: isToday ? "#fff" : "#999", background: isToday ? "var(--blue-600)" : "transparent", width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>{day}</span>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+                          {eventos.map((ev, k) => (
+                            <span
+                              key={k}
+                              title={`${ev.nome} · ${horaDe(ev.horario)}`}
+                              onClick={() => (ev.tipo === "grupo" ? onOpenTurma(ev.id) : setDiaModal({ day, eventos }))}
+                              style={{ cursor: "pointer", fontSize: 16, lineHeight: 1 }}
+                            >
+                              {ev.tipo === "grupo" ? flagOf(ev.id) : "🧑‍🏫"}
+                            </span>
+                          ))}
+                        </div>
+                      </React.Fragment>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {diaModal && (
+              <div onClick={() => setDiaModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(51,51,51,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
+                <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: 380, padding: 24, display: "flex", flexDirection: "column", gap: 12 }}>
+                  <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, lineHeight: "22px" }}>Dia {diaModal.day}</span>
+                  {diaModal.eventos.map((ev, k) => (
+                    <div key={k} onClick={() => { if (ev.tipo === "grupo") { onOpenTurma(ev.id); setDiaModal(null); } }} style={{ display: "flex", alignItems: "center", gap: 10, cursor: ev.tipo === "grupo" ? "pointer" : "default", padding: "8px 10px", background: "#f8f8f8" }}>
+                      <span style={{ fontSize: 22, lineHeight: 1 }}>{ev.tipo === "grupo" ? flagOf(ev.id) : "🧑‍🏫"}</span>
+                      <div>
+                        <div style={{ font: "600 13px var(--font-body)" }}>{ev.tipo === "grupo" ? flagOf(ev.id) + " " : "1:1 "}{ev.nome}</div>
+                        <div style={{ font: "400 12px var(--font-body)", color: "#888" }}>{horaDe(ev.horario)} · {ev.professor}</div>
+                      </div>
+                    </div>
+                  ))}
+                  <button onClick={() => setDiaModal(null)} style={{ all: "unset", cursor: "pointer", background: "#f2f2f2", padding: "10px 0", textAlign: "center", font: "600 13px var(--font-body)" }}>Fechar</button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {view !== "calendario" && individuais.length > 0 && (
         <div style={{ padding: "0 32px 40px" }}>
@@ -1398,12 +1771,23 @@ window.TurmasTab = TurmasTab;
 // ---- Relatórios ----
 {
 const D = window.SchoolData;
-const { flagOf, assiduidade, estadoCounts } = window.V2;
+const { flagOf, assiduidade, estadoCounts, health } = window.V2;
 
-function RelatoriosTab() {
-  const turmas = D.GROUP_TURMAS;
+function RelatoriosTab({ teacherName }) {
+  const [escopo, setEscopo] = React.useState("minhas");
+  const [chart, setChart] = React.useState("matriz");
+
+  const turmas = teacherName && escopo === "minhas" ? D.GROUP_TURMAS.filter((t) => t.professor === teacherName) : D.GROUP_TURMAS;
   const estados = estadoCounts();
   const maxEstado = estados[0][1];
+
+  const alunosEscopo = teacherName && escopo === "minhas" ? D.ALL_STUDENTS.filter((s) => turmas.some((t) => t.id === s.turmaId)) : D.ALL_STUDENTS;
+  const topAlunos = [...alunosEscopo].filter((s) => s.score != null).sort((a, b) => b.score - a.score).slice(0, 10);
+  const topTurmas = [...turmas].sort((a, b) => health(b) - health(a)).slice(0, 10);
+  const porEstagio = {};
+  turmas.forEach((t) => { porEstagio[t.estagio] = (porEstagio[t.estagio] || 0) + 1; });
+  const estagios = Object.entries(porEstagio).sort((a, b) => b[1] - a[1]);
+  const maxEstagio = estagios.length ? estagios[0][1] : 1;
 
   // scatter: x = ocupação (0–110), y = assiduidade (60–100)
   const W = 720, H = 380, PAD = 46;
@@ -1411,69 +1795,260 @@ function RelatoriosTab() {
   const py = (fr) => H - PAD - ((fr - 60) / 40) * (H - PAD * 2);
 
   return (
-    <div style={{ background: "#fff", minHeight: "100%", fontFamily: "var(--font-body)", padding: 32, display: "flex", flexDirection: "column", gap: 36 }} data-screen-label="Relatórios">
-      <div>
-        <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 26, lineHeight: "26px", display: "block", marginBottom: 4 }}>Matriz de performance por turma</span>
-        <span style={{ font: "400 13px var(--font-body)", color: "#999" }}>Ocupação (horizontal) × assiduidade (vertical). Ideal: canto superior direito.</span>
-        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: 780, display: "block", marginTop: 12 }} data-om-raster="true">
-          <rect x={PAD} y={PAD} width={(W - PAD * 2) / 2} height={(H - PAD * 2) / 2} fill="#fdf0ee" />
-          <rect x={PAD + (W - PAD * 2) / 2} y={PAD} width={(W - PAD * 2) / 2} height={(H - PAD * 2) / 2} fill="#eef2fd" />
-          <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={H - PAD} stroke="#333333" strokeWidth="2" />
-          <line x1={PAD} y1={PAD} x2={PAD} y2={H - PAD} stroke="#333333" strokeWidth="2" />
-          <line x1={px(55)} y1={PAD} x2={px(55)} y2={H - PAD} stroke="#ddd" strokeDasharray="4 4" />
-          <line x1={PAD} y1={py(80)} x2={W - PAD} y2={py(80)} stroke="#ddd" strokeDasharray="4 4" />
-          <text x={PAD + 8} y={PAD + 16} fontFamily="var(--font-body)" fontSize="11" fill="#c2543f">Assíduas mas vazias</text>
-          <text x={W - PAD - 8} y={PAD + 16} textAnchor="end" fontFamily="var(--font-body)" fontSize="11" fill="#3f56c2">Saudáveis</text>
-          <text x={PAD + 8} y={H - PAD - 8} fontFamily="var(--font-body)" fontSize="11" fill="#999">Atenção: vazias e defasadas</text>
-          <text x={W - PAD - 8} y={H - PAD - 8} textAnchor="end" fontFamily="var(--font-body)" fontSize="11" fill="#999">Cheias mas defasadas</text>
-          {turmas.map((t) => (
-            <g key={t.id}>
-              <text x={px(t.ocupacao)} y={py(assiduidade(t)) + 6} textAnchor="middle" fontSize="20">{flagOf(t.id)}</text>
-              <text x={px(t.ocupacao)} y={py(assiduidade(t)) + 22} textAnchor="middle" fontFamily="var(--font-body)" fontSize="9" fill="#666">{t.nome.length > 14 ? t.nome.slice(0, 13) + "…" : t.nome}</text>
-            </g>
+    <div style={{ background: "#fff", minHeight: "100%", fontFamily: "var(--font-body)", padding: 32, display: "flex", flexDirection: "column", gap: 30 }} data-screen-label="Relatórios">
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 2 }}>
+          {[["matriz", "Matriz de performance"], ["top-alunos", "Top alunos"], ["top-turmas", "Top turmas"], ["estagios", "Distribuição por estágio"]].map(([key, label]) => (
+            <button key={key} onClick={() => setChart(key)} style={{ all: "unset", cursor: "pointer", padding: "8px 16px", font: "600 12px var(--font-body)", color: chart === key ? "#fff" : "var(--gray-900)", background: chart === key ? "var(--blue-600)" : "#f2f2f2" }}>{label}</button>
           ))}
-          <text x={W / 2} y={H - 8} textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fill="#999">Ocupação (%)</text>
-          <text x={14} y={H / 2} fontFamily="var(--font-body)" fontSize="11" fill="#999" transform={`rotate(-90 14 ${H / 2})`} textAnchor="middle">Assiduidade (%)</text>
-        </svg>
+        </div>
+        {teacherName && (
+          <div style={{ display: "flex", gap: 2, marginLeft: "auto" }}>
+            {[["minhas", "Minhas turmas"], ["todas", "Todas as turmas"]].map(([key, label]) => (
+              <button key={key} onClick={() => setEscopo(key)} style={{ all: "unset", cursor: "pointer", padding: "8px 16px", font: "600 12px var(--font-body)", color: escopo === key ? "#fff" : "var(--gray-900)", background: escopo === key ? "var(--red-600)" : "#f2f2f2" }}>{label}</button>
+            ))}
+          </div>
+        )}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40 }}>
+      {chart === "matriz" && (
+        <React.Fragment>
+          <div>
+            <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 26, lineHeight: "26px", display: "block", marginBottom: 4 }}>Matriz de performance por turma</span>
+            <span style={{ font: "400 13px var(--font-body)", color: "#999" }}>Ocupação (horizontal) × assiduidade (vertical). Ideal: canto superior direito.</span>
+            <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: 780, display: "block", marginTop: 12 }} data-om-raster="true">
+              <rect x={PAD} y={PAD} width={(W - PAD * 2) / 2} height={(H - PAD * 2) / 2} fill="#fdf0ee" />
+              <rect x={PAD + (W - PAD * 2) / 2} y={PAD} width={(W - PAD * 2) / 2} height={(H - PAD * 2) / 2} fill="#eef2fd" />
+              <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={H - PAD} stroke="#333333" strokeWidth="2" />
+              <line x1={PAD} y1={PAD} x2={PAD} y2={H - PAD} stroke="#333333" strokeWidth="2" />
+              <line x1={px(55)} y1={PAD} x2={px(55)} y2={H - PAD} stroke="#ddd" strokeDasharray="4 4" />
+              <line x1={PAD} y1={py(80)} x2={W - PAD} y2={py(80)} stroke="#ddd" strokeDasharray="4 4" />
+              <text x={PAD + 8} y={PAD + 16} fontFamily="var(--font-body)" fontSize="11" fill="#c2543f">Assíduas mas vazias</text>
+              <text x={W - PAD - 8} y={PAD + 16} textAnchor="end" fontFamily="var(--font-body)" fontSize="11" fill="#3f56c2">Saudáveis</text>
+              <text x={PAD + 8} y={H - PAD - 8} fontFamily="var(--font-body)" fontSize="11" fill="#999">Atenção: vazias e defasadas</text>
+              <text x={W - PAD - 8} y={H - PAD - 8} textAnchor="end" fontFamily="var(--font-body)" fontSize="11" fill="#999">Cheias mas defasadas</text>
+              {turmas.map((t) => (
+                <g key={t.id}>
+                  <text x={px(t.ocupacao)} y={py(assiduidade(t)) + 6} textAnchor="middle" fontSize="20">{flagOf(t.id)}</text>
+                  <text x={px(t.ocupacao)} y={py(assiduidade(t)) + 22} textAnchor="middle" fontFamily="var(--font-body)" fontSize="9" fill="#666">{t.nome.length > 14 ? t.nome.slice(0, 13) + "…" : t.nome}</text>
+                </g>
+              ))}
+              <text x={W / 2} y={H - 8} textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fill="#999">Ocupação (%)</text>
+              <text x={14} y={H / 2} fontFamily="var(--font-body)" fontSize="11" fill="#999" transform={`rotate(-90 14 ${H / 2})`} textAnchor="middle">Assiduidade (%)</text>
+            </svg>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40 }}>
+            <div>
+              <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, lineHeight: "22px", display: "block", marginBottom: 14 }}>Assiduidade por turma</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {[...turmas].sort((a, b) => assiduidade(b) - assiduidade(a)).map((t) => (
+                  <div key={t.id} style={{ display: "grid", gridTemplateColumns: "200px 1fr 46px", alignItems: "center", gap: 10 }}>
+                    <span style={{ font: "600 12px var(--font-body)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{flagOf(t.id)} {t.nome}</span>
+                    <div style={{ height: 12, background: "#f2f2f2" }}>
+                      <div style={{ height: "100%", width: `${assiduidade(t)}%`, background: assiduidade(t) < 75 ? "var(--red-600)" : "var(--blue-600)" }} />
+                    </div>
+                    <span style={{ font: "600 12px var(--font-body)", textAlign: "right" }}>{assiduidade(t)}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, lineHeight: "22px", display: "block", marginBottom: 14 }}>Concentração de alunos por estado</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {estados.map(([uf, n]) => (
+                  <div key={uf} style={{ display: "grid", gridTemplateColumns: "40px 1fr 70px", alignItems: "center", gap: 10 }}>
+                    <span style={{ font: "600 13px var(--font-body)" }}>{uf}</span>
+                    <div style={{ height: 12, background: "#f2f2f2" }}>
+                      <div style={{ height: "100%", width: `${(n / maxEstado) * 100}%`, background: "var(--blue-600)" }} />
+                    </div>
+                    <span style={{ font: "600 12px var(--font-body)", textAlign: "right" }}>{n} alunos</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 14, background: "var(--paper-100, #EFE2C0)", padding: "12px 14px", font: "400 13px var(--font-body)", color: "var(--gray-900)" }}>
+                Maior concentração em <strong>{estados[0][0]}</strong> — pode fazer sentido planejar uma ação presencial lá.
+              </div>
+            </div>
+          </div>
+        </React.Fragment>
+      )}
+
+      {chart === "top-alunos" && (
         <div>
-          <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, lineHeight: "22px", display: "block", marginBottom: 14 }}>Assiduidade por turma</span>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {[...turmas].sort((a, b) => assiduidade(b) - assiduidade(a)).map((t) => (
-              <div key={t.id} style={{ display: "grid", gridTemplateColumns: "200px 1fr 46px", alignItems: "center", gap: 10 }}>
-                <span style={{ font: "600 12px var(--font-body)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{flagOf(t.id)} {t.nome}</span>
-                <div style={{ height: 12, background: "#f2f2f2" }}>
-                  <div style={{ height: "100%", width: `${assiduidade(t)}%`, background: assiduidade(t) < 75 ? "var(--red-600)" : "var(--blue-600)" }} />
-                </div>
-                <span style={{ font: "600 12px var(--font-body)", textAlign: "right" }}>{assiduidade(t)}%</span>
+          <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 26, lineHeight: "26px", display: "block", marginBottom: 16 }}>Top alunos por score</span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 680 }}>
+            {topAlunos.map((s, i) => (
+              <div key={s.matricula} style={{ display: "grid", gridTemplateColumns: "24px 1fr 1fr 50px", alignItems: "center", gap: 10 }}>
+                <span style={{ font: "600 12px var(--font-body)", color: "#999" }}>{i + 1}.</span>
+                <span style={{ font: "600 13px var(--font-body)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.name}</span>
+                <div style={{ height: 10, background: "#f2f2f2" }}><div style={{ height: "100%", width: `${s.score}%`, background: "var(--blue-600)" }} /></div>
+                <span style={{ font: "600 12px var(--font-body)", textAlign: "right" }}>{s.score}</span>
               </div>
             ))}
           </div>
         </div>
+      )}
+
+      {chart === "top-turmas" && (
         <div>
-          <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, lineHeight: "22px", display: "block", marginBottom: 14 }}>Concentração de alunos por estado</span>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {estados.map(([uf, n]) => (
-              <div key={uf} style={{ display: "grid", gridTemplateColumns: "40px 1fr 70px", alignItems: "center", gap: 10 }}>
-                <span style={{ font: "600 13px var(--font-body)" }}>{uf}</span>
-                <div style={{ height: 12, background: "#f2f2f2" }}>
-                  <div style={{ height: "100%", width: `${(n / maxEstado) * 100}%`, background: "var(--blue-600)" }} />
-                </div>
-                <span style={{ font: "600 12px var(--font-body)", textAlign: "right" }}>{n} alunos</span>
+          <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 26, lineHeight: "26px", display: "block", marginBottom: 16 }}>Top turmas por saúde (assiduidade + ocupação)</span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 680 }}>
+            {topTurmas.map((t, i) => (
+              <div key={t.id} style={{ display: "grid", gridTemplateColumns: "24px 220px 1fr 50px", alignItems: "center", gap: 10 }}>
+                <span style={{ font: "600 12px var(--font-body)", color: "#999" }}>{i + 1}.</span>
+                <span style={{ font: "600 13px var(--font-body)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{flagOf(t.id)} {t.nome}</span>
+                <div style={{ height: 10, background: "#f2f2f2" }}><div style={{ height: "100%", width: `${health(t)}%`, background: "var(--blue-600)" }} /></div>
+                <span style={{ font: "600 12px var(--font-body)", textAlign: "right" }}>{health(t)}</span>
               </div>
             ))}
           </div>
-          <div style={{ marginTop: 14, background: "var(--paper-100, #EFE2C0)", padding: "12px 14px", font: "400 13px var(--font-body)", color: "var(--gray-900)" }}>
-            Maior concentração em <strong>{estados[0][0]}</strong> — pode fazer sentido planejar uma ação presencial lá.
+        </div>
+      )}
+
+      {chart === "estagios" && (
+        <div>
+          <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 26, lineHeight: "26px", display: "block", marginBottom: 16 }}>Distribuição de turmas por estágio</span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 680 }}>
+            {estagios.map(([est, n]) => (
+              <div key={est} style={{ display: "grid", gridTemplateColumns: "180px 1fr 40px", alignItems: "center", gap: 10 }}>
+                <span style={{ font: "600 13px var(--font-body)" }}>{est}</span>
+                <div style={{ height: 12, background: "#f2f2f2" }}><div style={{ height: "100%", width: `${(n / maxEstagio) * 100}%`, background: "var(--red-600)" }} /></div>
+                <span style={{ font: "600 12px var(--font-body)", textAlign: "right" }}>{n}</span>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
 window.RelatoriosTab = RelatoriosTab;
+}
+
+// ---- Comercial: alunos em processo de onboarding ----
+{
+function ComercialTab({ students, setStudents }) {
+  const { Pill } = window.CommissionSchoolDesignSystem_c6e6c2;
+  const { nextMatricula } = window.SchoolData;
+  const turmaOptions = window.SchoolData.allTurmaOptions();
+  const emOnboarding = students.filter((s) => !s.primeiraAula);
+  const [showModal, setShowModal] = React.useState(false);
+  const origens = ["Instagram", "Indicação", "Google", "Evento presencial", "WhatsApp", "Outro"];
+  const [form, setForm] = React.useState({ name: "", origem: origens[0] });
+  const previewMatricula = React.useMemo(() => nextMatricula(), [showModal]);
+
+  const updateStudent = (matricula, patch) => setStudents((list) => list.map((s) => (s.matricula === matricula ? { ...s, ...patch } : s)));
+
+  const addLead = (e) => {
+    e.preventDefault();
+    if (!form.name.trim()) return;
+    setStudents((list) => [
+      { name: form.name.trim(), matricula: nextMatricula(), origem: form.origem, turmaId: null, turmaNome: "Sem turma definida", individual: false, onboarding: false, primeiraAula: false, frequencia: 0, licaoCasa: 0, score: null, financeiro: "adimplente" },
+      ...list,
+    ]);
+    setForm({ name: "", origem: origens[0] });
+    setShowModal(false);
+  };
+
+  const marcarPrimeiraAula = (matricula) => {
+    setStudents((list) => list.map((s) => (s.matricula === matricula ? { ...s, primeiraAula: true } : s)));
+  };
+  const toggleOnboarding = (matricula) => {
+    setStudents((list) => list.map((s) => (s.matricula === matricula ? { ...s, onboarding: !s.onboarding } : s)));
+  };
+
+  return (
+    <div style={{ background: "#fff", minHeight: "100%", fontFamily: "var(--font-body)" }} data-screen-label="Comercial">
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 16, padding: "14px 32px", borderBottom: "1px solid #eee" }}>
+        <div>
+          <span style={{ font: "600 13px var(--font-body)", color: "#999", textTransform: "uppercase", letterSpacing: "0.06em" }}>Comercial · {emOnboarding.length} em onboarding</span>
+          <div style={{ font: "400 13px var(--font-body)", color: "#888", marginTop: 4 }}>Alunos que ainda não fizeram a primeira aula. Ao concluir, saem daqui e entram na base de Alunos.</div>
+        </div>
+        <button onClick={() => setShowModal(true)} style={{ all: "unset", cursor: "pointer", marginLeft: "auto", background: "var(--blue-600)", color: "#fff", padding: "8px 16px", font: "600 13px var(--font-body)", whiteSpace: "nowrap" }}>
+          + Adicionar aluno
+        </button>
+      </div>
+      {showModal && (
+        <div onClick={() => setShowModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(51,51,51,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
+          <form onClick={(e) => e.stopPropagation()} onSubmit={addLead} style={{ background: "#fff", width: 380, padding: 26, display: "flex", flexDirection: "column", gap: 14 }}>
+            <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 24, lineHeight: "24px" }}>Adicionar aluno</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label style={{ font: "600 11px var(--font-body)", color: "#777", textTransform: "uppercase" }}>Nome</label>
+              <input autoFocus value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} style={{ border: "1px solid #ddd", padding: "8px 10px", font: "400 14px var(--font-body)", outline: "none" }} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label style={{ font: "600 11px var(--font-body)", color: "#777", textTransform: "uppercase" }}>Por onde veio</label>
+              <select value={form.origem} onChange={(e) => setForm((f) => ({ ...f, origem: e.target.value }))} style={{ border: "1px solid #ddd", padding: "8px 10px", font: "400 14px var(--font-body)" }}>
+                {origens.map((o) => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label style={{ font: "600 11px var(--font-body)", color: "#777", textTransform: "uppercase" }}>Matrícula (gerada automaticamente)</label>
+              <span style={{ font: "600 14px var(--font-body)", color: "#666", padding: "8px 10px", background: "#f2f2f2" }}>{previewMatricula}</span>
+            </div>
+            <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+              <button type="button" onClick={() => setShowModal(false)} style={{ all: "unset", cursor: "pointer", flex: 1, textAlign: "center", padding: "10px 0", font: "600 13px var(--font-body)", background: "#f2f2f2" }}>Cancelar</button>
+              <button type="submit" style={{ all: "unset", cursor: "pointer", flex: 1, textAlign: "center", padding: "10px 0", font: "600 13px var(--font-body)", background: "var(--blue-600)", color: "#fff" }}>Cadastrar</button>
+            </div>
+          </form>
+        </div>
+      )}
+      {emOnboarding.length === 0 ? (
+        <div style={{ padding: 40, font: "400 15px var(--font-body)", color: "#999" }}>Nenhum aluno em processo de onboarding no momento.</div>
+      ) : (
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ textAlign: "left", borderBottom: "2px solid var(--gray-900)" }}>
+              <th style={{ padding: "12px 32px 10px 32px", font: "600 13px var(--font-body)" }}>Aluno</th>
+              <th style={{ padding: "12px 8px 10px", font: "600 13px var(--font-body)" }}>Matrícula</th>
+              <th style={{ padding: "12px 8px 10px", font: "600 13px var(--font-body)" }}>Turma</th>
+              <th style={{ padding: "12px 8px 10px", font: "600 13px var(--font-body)" }}>Origem</th>
+              <th style={{ padding: "12px 8px 10px", font: "600 13px var(--font-body)" }}>Onboarding</th>
+              <th style={{ padding: "12px 32px 10px 8px", font: "600 13px var(--font-body)" }}>Primeira aula</th>
+            </tr>
+          </thead>
+          <tbody>
+            {emOnboarding.map((s) => (
+              <tr key={s.matricula} style={{ borderBottom: "1px solid #eee" }}>
+                <td style={{ padding: "10px 32px 10px 32px" }}>
+                  <input defaultValue={s.name} onBlur={(e) => updateStudent(s.matricula, { name: e.target.value })} style={{ all: "unset", font: "600 14px var(--font-body)", width: "100%" }} />
+                </td>
+                <td style={{ padding: "10px 8px" }}>
+                  <input defaultValue={s.matricula} onBlur={(e) => updateStudent(s.matricula, { matricula: e.target.value })} style={{ all: "unset", font: "400 13px var(--font-body)", color: "#888", width: "100%" }} />
+                </td>
+                <td style={{ padding: "10px 8px" }}>
+                  <select
+                    value={s.turmaId || ""}
+                    onChange={(e) => {
+                      if (!e.target.value) { updateStudent(s.matricula, { turmaId: null, turmaNome: "Sem turma definida", individual: false }); return; }
+                      const t = turmaOptions.find((o) => o.id === e.target.value);
+                      updateStudent(s.matricula, { turmaId: t.id, turmaNome: t.nome, individual: !t.group });
+                    }}
+                    style={{ font: "400 13px var(--font-body)", color: "#666", border: "none", background: "transparent", outline: "none", width: "100%" }}
+                  >
+                    <option value="">Sem turma definida</option>
+                    {turmaOptions.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
+                  </select>
+                </td>
+                <td style={{ padding: "10px 8px", font: "400 13px var(--font-body)", color: "#666" }}>{s.origem || "—"}</td>
+                <td style={{ padding: "10px 8px" }}>
+                  <button onClick={() => toggleOnboarding(s.matricula)} style={{ all: "unset", cursor: "pointer" }}>
+                    <Pill tone={s.onboarding ? "blue" : "outline"}>{s.onboarding ? "Concluído" : "Pendente"}</Pill>
+                  </button>
+                </td>
+                <td style={{ padding: "10px 8px 10px 8px" }}>
+                  <button onClick={() => marcarPrimeiraAula(s.matricula)} style={{ all: "unset", cursor: "pointer", background: "var(--blue-600)", color: "#fff", padding: "6px 12px", font: "600 12px var(--font-body)" }}>Marcar 1ª aula feita →</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+window.ComercialTab = ComercialTab;
 }
 
 // ---- Chat (Slack-like) ----
@@ -1856,6 +2431,7 @@ function StaffShellV2({ loggedInAs, onLogout }) {
   const [tab, setTab] = React.useState("painel");
   const [screen, setScreen] = React.useState("home");
   const [turmaId, setTurmaId] = React.useState(null);
+  const [students, setStudents] = React.useState(() => window.SchoolData.ALL_STUDENTS.map((s) => ({ ...s })));
 
   const openTurma = (id) => { setTurmaId(id); setScreen("turma"); };
   const backHome = () => setScreen("home");
@@ -1865,9 +2441,9 @@ function StaffShellV2({ loggedInAs, onLogout }) {
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "14px 32px", borderBottom: "1px solid #eee", position: "sticky", top: 0, background: "#fff", zIndex: 5 }}>
-        <img src={(window.__resources && window.__resources.commissionLogo) || "./commission-logo.jpg"} alt="Commission School" style={{ height: 30 }} />
+        <img src={(window.__resources && window.__resources.commissionLogo) || "commission-logo.jpg"} alt="Commission School" onClick={onLogout} style={{ height: 30, cursor: "pointer" }} />
         <div style={{ display: "flex", gap: 2, marginLeft: 10 }}>
-          {[["painel", "Painel"], ["relatorios", "Relatórios"], ["chat", "Chat"], ["professor", "Professor"], ["alunos", "Alunos"]].map(([key, label]) => (
+          {[["painel", "Painel"], ["relatorios", "Relatórios"], ["chat", "Chat"], ["professor", "Professor"], ...(isRealTeacher ? [] : [["comercial", "Comercial"]]), ["alunos", "Alunos"]].map(([key, label]) => (
             <button
               key={key}
               onClick={() => goTab(key)}
@@ -1884,6 +2460,7 @@ function StaffShellV2({ loggedInAs, onLogout }) {
         </div>
         <div style={{ marginLeft: "auto", display: "flex", gap: 18, alignItems: "center" }}>
           <NotifBell />
+          <button onClick={() => setTab("painel")} style={{ all: "unset", cursor: "pointer", font: "600 13px var(--font-body)", color: "var(--gray-900)" }}>Início</button>
           <button onClick={() => setTab("perfil")} style={{ all: "unset", cursor: "pointer", font: "600 13px var(--font-body)", color: "var(--blue-600)" }}>Meu perfil</button>
           <button onClick={onLogout} style={{ all: "unset", cursor: "pointer", font: "600 13px var(--font-body)", color: "#999" }}>Sair</button>
         </div>
@@ -1893,7 +2470,7 @@ function StaffShellV2({ loggedInAs, onLogout }) {
         {tab === "painel" && screen === "home" && <PainelMacro onOpenTurma={openTurma} />}
         {tab === "painel" && screen === "turma" && <TurmaDetail turmaId={turmaId} onBack={backHome} />}
 
-        {tab === "relatorios" && <RelatoriosTab />}
+        {tab === "relatorios" && <RelatoriosTab teacherName={isRealTeacher ? loggedInAs : null} />}
         {tab === "chat" && <ChatTab loggedInAs={loggedInAs} />}
 
         {tab === "professor" && !isRealTeacher && (
@@ -1909,7 +2486,9 @@ function StaffShellV2({ loggedInAs, onLogout }) {
         )}
         {tab === "professor" && isRealTeacher && screen === "turma" && <TurmaDetail turmaId={turmaId} onBack={backHome} />}
 
-        {tab === "alunos" && <StudentsAdmin />}
+        {tab === "alunos" && <StudentsAdmin students={students} setStudents={setStudents} />}
+
+        {tab === "comercial" && !isRealTeacher && <ComercialTab students={students} setStudents={setStudents} />}
 
         {tab === "perfil" && (
           <ProfilePage
@@ -1930,9 +2509,10 @@ function StudentShellV2({ student, onLogout }) {
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "14px 32px", borderBottom: "1px solid #eee", position: "sticky", top: 0, background: "#fff", zIndex: 5 }}>
-        <img src={(window.__resources && window.__resources.commissionLogo) || "./commission-logo.jpg"} alt="Commission School" style={{ height: 30 }} />
+        <img src={(window.__resources && window.__resources.commissionLogo) || "commission-logo.jpg"} alt="Commission School" onClick={onLogout} style={{ height: 30, cursor: "pointer" }} />
         <span style={{ font: "600 12px var(--font-body)", color: "#999", textTransform: "uppercase", letterSpacing: "0.06em" }}>Conectado como {student.name}</span>
         <div style={{ marginLeft: "auto", display: "flex", gap: 14, alignItems: "center" }}>
+          <button onClick={() => setTab("home")} style={{ all: "unset", cursor: "pointer", font: "600 13px var(--font-body)", color: "var(--gray-900)" }}>Início</button>
           <button onClick={() => setTab(tab === "perfil" ? "home" : "perfil")} style={{ all: "unset", cursor: "pointer", font: "600 13px var(--font-body)", color: "var(--blue-600)" }}>Meu perfil</button>
           <button onClick={onLogout} style={{ all: "unset", cursor: "pointer", font: "600 13px var(--font-body)", color: "#999" }}>Sair</button>
         </div>
@@ -1959,9 +2539,7 @@ function StudentShellV2({ student, onLogout }) {
 
 function SchoolAppV2() {
   const [stage, setStage] = React.useState("home");
-  const [loggedInAs, 
-    
-    setLoggedInAs] = React.useState(null);
+  const [loggedInAs, setLoggedInAs] = React.useState(null);
   const [student, setStudent] = React.useState(null);
 
   const logout = () => { setStage("home"); setLoggedInAs(null); setStudent(null); };
